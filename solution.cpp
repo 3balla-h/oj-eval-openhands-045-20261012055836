@@ -125,56 +125,75 @@ class ElevatorSystem {
 private:
     int current_floor;
     int direction; // 1 for up, -1 for down
-    int requests[MAXN + 1]; // Store all requests
-    int request_count;
+    MinHeap up_heap;      // All requests (we'll filter when needed)
+    MaxHeap down_heap;    // All requests (we'll filter when needed)
+    int temp_arr[MAXN + 1]; // Temporary array
     
-    // Find nearest request in current direction
-    int find_nearest_in_direction() {
-        int nearest = -1;
+    // Find nearest request above current floor
+    int find_nearest_above() {
+        int count = up_heap.extract_all(temp_arr);
+        int result = -1;
         int min_dist = 1000000000;
         
-        for (int i = 1; i <= request_count; i++) {
-            if (direction == 1 && requests[i] > current_floor) {
-                int dist = requests[i] - current_floor;
+        for (int i = 1; i <= count; i++) {
+            if (temp_arr[i] > current_floor) {
+                int dist = temp_arr[i] - current_floor;
                 if (dist < min_dist) {
                     min_dist = dist;
-                    nearest = requests[i];
-                }
-            } else if (direction == -1 && requests[i] < current_floor) {
-                int dist = current_floor - requests[i];
-                if (dist < min_dist) {
-                    min_dist = dist;
-                    nearest = requests[i];
+                    result = temp_arr[i];
                 }
             }
+            up_heap.push(temp_arr[i]);
         }
         
-        return nearest;
+        return result;
+    }
+    
+    // Find nearest request below current floor
+    int find_nearest_below() {
+        int count = down_heap.extract_all(temp_arr);
+        int result = -1;
+        int min_dist = 1000000000;
+        
+        for (int i = 1; i <= count; i++) {
+            if (temp_arr[i] < current_floor) {
+                int dist = current_floor - temp_arr[i];
+                if (dist < min_dist) {
+                    min_dist = dist;
+                    result = temp_arr[i];
+                }
+            }
+            down_heap.push(temp_arr[i]);
+        }
+        
+        return result;
     }
     
     // Remove specific request
     void remove_request(int floor) {
-        int pos = -1;
-        for (int i = 1; i <= request_count; i++) {
-            if (requests[i] == floor) {
-                pos = i;
-                break;
+        // Remove from up heap
+        int count = up_heap.extract_all(temp_arr);
+        for (int i = 1; i <= count; i++) {
+            if (temp_arr[i] != floor) {
+                up_heap.push(temp_arr[i]);
             }
         }
         
-        if (pos != -1) {
-            for (int i = pos; i < request_count; i++) {
-                requests[i] = requests[i + 1];
+        // Remove from down heap
+        count = down_heap.extract_all(temp_arr);
+        for (int i = 1; i <= count; i++) {
+            if (temp_arr[i] != floor) {
+                down_heap.push(temp_arr[i]);
             }
-            request_count--;
         }
     }
     
 public:
-    ElevatorSystem() : current_floor(0), direction(1), request_count(0) {}
+    ElevatorSystem() : current_floor(0), direction(1) {}
     
     void add_request(int floor) {
-        requests[++request_count] = floor;
+        up_heap.push(floor);
+        down_heap.push(floor);
     }
     
     void cancel_request(int floor) {
@@ -182,25 +201,38 @@ public:
     }
     
     void action() {
-        if (request_count == 0) {
+        if (up_heap.empty() && down_heap.empty()) {
             // No requests, stay still
             return;
         }
         
-        // Try to find request in current direction
-        int nearest = find_nearest_in_direction();
-        
-        if (nearest != -1) {
-            // Found a request in current direction
-            current_floor = nearest;
-            remove_request(nearest);
-        } else {
-            // No requests in current direction, reverse
-            direction = -direction;
-            nearest = find_nearest_in_direction();
+        if (direction == 1) { // Going up
+            int nearest = find_nearest_above();
             if (nearest != -1) {
                 current_floor = nearest;
                 remove_request(nearest);
+            } else {
+                // No requests above, reverse direction
+                direction = -1;
+                int nearest_down = find_nearest_below();
+                if (nearest_down != -1) {
+                    current_floor = nearest_down;
+                    remove_request(nearest_down);
+                }
+            }
+        } else { // Going down
+            int nearest = find_nearest_below();
+            if (nearest != -1) {
+                current_floor = nearest;
+                remove_request(nearest);
+            } else {
+                // No requests below, reverse direction
+                direction = 1;
+                int nearest_up = find_nearest_above();
+                if (nearest_up != -1) {
+                    current_floor = nearest_up;
+                    remove_request(nearest_up);
+                }
             }
         }
     }
