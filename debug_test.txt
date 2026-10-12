@@ -1,0 +1,13 @@
+11
+locate
+add 1
+add 2
+add 3
+cancel 1
+action
+locate
+add 0
+action
+locate
+action
+locate
