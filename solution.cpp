@@ -187,7 +187,7 @@ public:
             return;
         }
         
-        // Try to find request in current direction
+        // Find nearest request in current direction
         int nearest = find_nearest_in_direction();
         
         if (nearest != -1) {
@@ -195,13 +195,17 @@ public:
             current_floor = nearest;
             remove_request(nearest);
         } else {
-            // No requests in current direction, reverse
+            // No requests in current direction, reverse direction
             direction = -direction;
+            
+            // Find nearest request in new direction
             nearest = find_nearest_in_direction();
             if (nearest != -1) {
                 current_floor = nearest;
                 remove_request(nearest);
             }
+            // If still no requests, elevator stays at current floor
+            // and direction remains reversed
         }
     }
     
