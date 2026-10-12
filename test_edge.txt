@@ -1,0 +1,10 @@
+10
+locate
+add 0
+action
+locate
+add 10
+action
+locate
+action
+locate

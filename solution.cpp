@@ -215,23 +215,23 @@ int main() {
     cin.tie(nullptr);
     
     int n;
-    cin >> n;
+    if (!(cin >> n)) return 0;
     
     ElevatorSystem elevator;
     
     for (int i = 0; i < n; i++) {
         string command;
-        cin >> command;
+        if (!(cin >> command)) break;
         
         if (command == "action") {
             elevator.action();
         } else if (command == "add") {
             int floor;
-            cin >> floor;
+            if (!(cin >> floor)) break;
             elevator.add_request(floor);
         } else if (command == "cancel") {
             int floor;
-            cin >> floor;
+            if (!(cin >> floor)) break;
             elevator.cancel_request(floor);
         } else if (command == "locate") {
             cout << elevator.locate() << "\n";
